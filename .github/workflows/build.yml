@@ -30,7 +30,10 @@ jobs:
 
       - name: Fix Kotlin version
         working-directory: temp_app
-        run: sed -i "s/ext.kotlin_version = '.*'/ext.kotlin_version = '1.9.0'/" android/build.gradle
+        run: |
+          sed -i "s/ext.kotlin_version = '.*'/ext.kotlin_version = '1.9.0'/" android/build.gradle
+          sed -i 's/compileSdkVersion 33/compileSdkVersion 34/' android/app/build.gradle
+          sed -i 's/targetSdkVersion 33/targetSdkVersion 34/' android/app/build.gradle
 
       - name: Build APK
         working-directory: temp_app
