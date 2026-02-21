@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  MobileAds.instance.initialize();
   runApp(const SuperCalculatorApp());
 }
 
@@ -25,6 +28,36 @@ class SuperCalculatorApp extends StatelessWidget {
   }
 }
 
+// Ad Helper Class
+class AdManager {
+  static InterstitialAd? _interstitialAd;
+  static const String adUnitId = 'ca-app-pub-3388046310202385/8716374320';
+
+  static void loadInterstitialAd() {
+    InterstitialAd.load(
+      adUnitId: adUnitId,
+      request: const AdRequest(),
+      adLoadCallback: InterstitialAdLoadCallback(
+        onAdLoaded: (ad) => _interstitialAd = ad,
+        onAdFailedToLoad: (error) => _interstitialAd = null,
+      ),
+    );
+  }
+
+  static void showInterstitialAd() {
+    if (_interstitialAd != null) {
+      _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
+        onAdDismissedFullScreenContent: (ad) {
+          ad.dispose();
+          _interstitialAd = null;
+          loadInterstitialAd();
+        },
+      );
+      _interstitialAd!.show();
+    }
+  }
+}
+
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -42,12 +75,21 @@ class _HomeScreenState extends State<HomeScreen> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    AdManager.loadInterstitialAd();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: _screens[_selectedIndex],
       bottomNavigationBar: NavigationBar(
         selectedIndex: _selectedIndex,
-        onDestinationSelected: (i) => setState(() => _selectedIndex = i),
+        onDestinationSelected: (i) {
+          AdManager.showInterstitialAd();
+          setState(() => _selectedIndex = i);
+        },
         destinations: const [
           NavigationDestination(icon: Icon(Icons.currency_rupee), label: 'Finance'),
           NavigationDestination(icon: Icon(Icons.swap_horiz), label: 'Converter'),
@@ -93,7 +135,10 @@ class _FinanceScreenState extends State<FinanceScreen> {
                   child: FilterChip(
                     label: Text(e.value),
                     selected: _selectedTool == e.key,
-                    onSelected: (_) => setState(() => _selectedTool = e.key),
+                    onSelected: (_) {
+                      AdManager.showInterstitialAd();
+                      setState(() => _selectedTool = e.key);
+                    },
                   ),
                 );
               }).toList(),
@@ -527,7 +572,10 @@ class _ConverterScreenState extends State<ConverterScreen> {
                   child: FilterChip(
                     label: Text(e.value),
                     selected: _selectedTool == e.key,
-                    onSelected: (_) => setState(() => _selectedTool = e.key),
+                    onSelected: (_) {
+                      AdManager.showInterstitialAd();
+                      setState(() => _selectedTool = e.key);
+                    },
                   ),
                 );
               }).toList(),
