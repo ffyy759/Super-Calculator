@@ -1,4 +1,4 @@
-'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 void main() {
@@ -58,7 +58,12 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-// ===================== FINANCE SCREEN =====================
+double myPow(double base, double exp) {
+  double result = 1;
+  for (int i = 0; i < exp.toInt(); i++) result *= base;
+  return result;
+}
+
 class FinanceScreen extends StatefulWidget {
   const FinanceScreen({super.key});
 
@@ -68,7 +73,6 @@ class FinanceScreen extends StatefulWidget {
 
 class _FinanceScreenState extends State<FinanceScreen> {
   int _selectedTool = 0;
-
   final List<String> tools = ['EMI', 'GST', 'Salary', 'Interest', 'Discount', 'Profit/Loss'];
 
   @override
@@ -111,7 +115,6 @@ class _FinanceScreenState extends State<FinanceScreen> {
   }
 }
 
-// EMI Calculator
 class EMICalculator extends StatefulWidget {
   const EMICalculator({super.key});
 
@@ -130,7 +133,8 @@ class _EMICalculatorState extends State<EMICalculator> {
     final r = (double.tryParse(_rate.text) ?? 0) / 12 / 100;
     final n = double.tryParse(_tenure.text) ?? 0;
     if (p > 0 && r > 0 && n > 0) {
-      final e = p * r * (1 + r).exp(n) / ((1 + r).exp(n) - 1);
+      final powered = myPow(1 + r, n);
+      final e = p * r * powered / (powered - 1);
       setState(() {
         emi = e;
         totalAmount = e * n;
@@ -167,17 +171,6 @@ class _EMICalculatorState extends State<EMICalculator> {
   }
 }
 
-extension on double {
-  double exp(double n) => pow(this, n).toDouble();
-}
-
-double pow(double base, double exp) {
-  double result = 1;
-  for (int i = 0; i < exp; i++) result *= base;
-  return result;
-}
-
-// GST Calculator
 class GSTCalculator extends StatefulWidget {
   const GSTCalculator({super.key});
 
@@ -257,7 +250,7 @@ class _GSTCalculatorState extends State<GSTCalculator> {
           if (gstAmount != null) ...[
             const SizedBox(height: 20),
             _ResultCard('Original Amount', 'Rs ${originalAmount!.toStringAsFixed(2)}', Colors.blue),
-            _ResultCard('GST Amount (${_gstRate.toInt()}%)', 'Rs ${gstAmount!.toStringAsFixed(2)}', Colors.orange),
+            _ResultCard('GST (${_gstRate.toInt()}%)', 'Rs ${gstAmount!.toStringAsFixed(2)}', Colors.orange),
             _ResultCard('Total Amount', 'Rs ${totalAmount!.toStringAsFixed(2)}', Colors.green),
           ],
         ],
@@ -266,7 +259,6 @@ class _GSTCalculatorState extends State<GSTCalculator> {
   }
 }
 
-// Salary Calculator
 class SalaryCalculator extends StatefulWidget {
   const SalaryCalculator({super.key});
 
@@ -320,7 +312,6 @@ class _SalaryCalculatorState extends State<SalaryCalculator> {
   }
 }
 
-// Interest Calculator
 class InterestCalculator extends StatefulWidget {
   const InterestCalculator({super.key});
 
@@ -342,7 +333,7 @@ class _InterestCalculatorState extends State<InterestCalculator> {
     if (p > 0 && r > 0 && t > 0) {
       setState(() {
         if (_isCompound) {
-          totalAmount = p * pow(1 + r / 100, t);
+          totalAmount = p * myPow(1 + r / 100, t);
           interest = totalAmount! - p;
         } else {
           interest = p * r * t / 100;
@@ -399,7 +390,6 @@ class _InterestCalculatorState extends State<InterestCalculator> {
   }
 }
 
-// Discount Calculator
 class DiscountCalculator extends StatefulWidget {
   const DiscountCalculator({super.key});
 
@@ -410,7 +400,7 @@ class DiscountCalculator extends StatefulWidget {
 class _DiscountCalculatorState extends State<DiscountCalculator> {
   final _price = TextEditingController();
   final _discount = TextEditingController();
-  double? discountAmount, finalPrice, savings;
+  double? discountAmount, finalPrice;
 
   void _calculate() {
     final p = double.tryParse(_price.text) ?? 0;
@@ -419,7 +409,6 @@ class _DiscountCalculatorState extends State<DiscountCalculator> {
       setState(() {
         discountAmount = p * d / 100;
         finalPrice = p - discountAmount!;
-        savings = discountAmount;
       });
     }
   }
@@ -442,8 +431,7 @@ class _DiscountCalculatorState extends State<DiscountCalculator> {
           if (finalPrice != null) ...[
             const SizedBox(height: 20),
             _ResultCard('Final Price', 'Rs ${finalPrice!.toStringAsFixed(2)}', Colors.green),
-            _ResultCard('You Save', 'Rs ${savings!.toStringAsFixed(2)}', Colors.orange),
-            _ResultCard('Discount Amount', 'Rs ${discountAmount!.toStringAsFixed(2)}', Colors.red),
+            _ResultCard('You Save', 'Rs ${discountAmount!.toStringAsFixed(2)}', Colors.orange),
           ],
         ],
       ),
@@ -451,7 +439,6 @@ class _DiscountCalculatorState extends State<DiscountCalculator> {
   }
 }
 
-// Profit Loss Calculator
 class ProfitLossCalculator extends StatefulWidget {
   const ProfitLossCalculator({super.key});
 
@@ -511,7 +498,6 @@ class _ProfitLossCalculatorState extends State<ProfitLossCalculator> {
   }
 }
 
-// ===================== CONVERTER SCREEN =====================
 class ConverterScreen extends StatefulWidget {
   const ConverterScreen({super.key});
 
@@ -575,13 +561,9 @@ class _WeightConverterState extends State<WeightConverter> {
   double? result;
 
   final units = ['kg', 'gram', 'pound', 'ounce', 'ton'];
-
   final toKg = {
-    'kg': 1.0,
-    'gram': 0.001,
-    'pound': 0.453592,
-    'ounce': 0.0283495,
-    'ton': 1000.0,
+    'kg': 1.0, 'gram': 0.001, 'pound': 0.453592,
+    'ounce': 0.0283495, 'ton': 1000.0,
   };
 
   void _convert() {
@@ -639,4 +621,464 @@ class _WeightConverterState extends State<WeightConverter> {
 class LengthConverter extends StatefulWidget {
   const LengthConverter({super.key});
 
-  @overri
+  @override
+  State<LengthConverter> createState() => _LengthConverterState();
+}
+
+class _LengthConverterState extends State<LengthConverter> {
+  final _input = TextEditingController();
+  String _from = 'meter';
+  String _to = 'feet';
+  double? result;
+
+  final units = ['meter', 'km', 'cm', 'mm', 'feet', 'inch', 'mile'];
+  final toMeter = {
+    'meter': 1.0, 'km': 1000.0, 'cm': 0.01,
+    'mm': 0.001, 'feet': 0.3048, 'inch': 0.0254, 'mile': 1609.34,
+  };
+
+  void _convert() {
+    final val = double.tryParse(_input.text) ?? 0;
+    if (val > 0) {
+      final inMeter = val * toMeter[_from]!;
+      setState(() => result = inMeter / toMeter[_to]!);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          _InputField(_input, 'Enter Value', Icons.straighten),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: DropdownButtonFormField(
+                  value: _from,
+                  decoration: const InputDecoration(labelText: 'From', border: OutlineInputBorder()),
+                  items: units.map((u) => DropdownMenuItem(value: u, child: Text(u))).toList(),
+                  onChanged: (v) => setState(() => _from = v!),
+                ),
+              ),
+              const Padding(padding: EdgeInsets.all(8), child: Icon(Icons.arrow_forward)),
+              Expanded(
+                child: DropdownButtonFormField(
+                  value: _to,
+                  decoration: const InputDecoration(labelText: 'To', border: OutlineInputBorder()),
+                  items: units.map((u) => DropdownMenuItem(value: u, child: Text(u))).toList(),
+                  onChanged: (v) => setState(() => _to = v!),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton.icon(
+            onPressed: _convert,
+            icon: const Icon(Icons.swap_horiz),
+            label: const Text('Convert'),
+            style: ElevatedButton.styleFrom(minimumSize: const Size(double.infinity, 50)),
+          ),
+          if (result != null)
+            _ResultCard('Result', '${result!.toStringAsFixed(4)} $_to', Colors.blue),
+        ],
+      ),
+    );
+  }
+}
+
+class TempConverter extends StatefulWidget {
+  const TempConverter({super.key});
+
+  @override
+  State<TempConverter> createState() => _TempConverterState();
+}
+
+class _TempConverterState extends State<TempConverter> {
+  final _input = TextEditingController();
+  String _from = 'Celsius';
+  String _to = 'Fahrenheit';
+  double? result;
+
+  final units = ['Celsius', 'Fahrenheit', 'Kelvin'];
+
+  double _convert(double val, String from, String to) {
+    double celsius;
+    switch (from) {
+      case 'Fahrenheit': celsius = (val - 32) * 5 / 9; break;
+      case 'Kelvin': celsius = val - 273.15; break;
+      default: celsius = val;
+    }
+    switch (to) {
+      case 'Fahrenheit': return celsius * 9 / 5 + 32;
+      case 'Kelvin': return celsius + 273.15;
+      default: return celsius;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          _InputField(_input, 'Enter Temperature', Icons.thermostat),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: DropdownButtonFormField(
+                  value: _from,
+                  decoration: const InputDecoration(labelText: 'From', border: OutlineInputBorder()),
+                  items: units.map((u) => DropdownMenuItem(value: u, child: Text(u))).toList(),
+                  onChanged: (v) => setState(() => _from = v!),
+                ),
+              ),
+              const Padding(padding: EdgeInsets.all(8), child: Icon(Icons.arrow_forward)),
+              Expanded(
+                child: DropdownButtonFormField(
+                  value: _to,
+                  decoration: const InputDecoration(labelText: 'To', border: OutlineInputBorder()),
+                  items: units.map((u) => DropdownMenuItem(value: u, child: Text(u))).toList(),
+                  onChanged: (v) => setState(() => _to = v!),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton.icon(
+            onPressed: () {
+              final val = double.tryParse(_input.text) ?? 0;
+              setState(() => result = _convert(val, _from, _to));
+            },
+            icon: const Icon(Icons.swap_horiz),
+            label: const Text('Convert'),
+            style: ElevatedButton.styleFrom(minimumSize: const Size(double.infinity, 50)),
+          ),
+          if (result != null)
+            _ResultCard('Result', '${result!.toStringAsFixed(2)} $_to', Colors.orange),
+        ],
+      ),
+    );
+  }
+}
+
+class AreaConverter extends StatefulWidget {
+  const AreaConverter({super.key});
+
+  @override
+  State<AreaConverter> createState() => _AreaConverterState();
+}
+
+class _AreaConverterState extends State<AreaConverter> {
+  final _input = TextEditingController();
+  String _from = 'sqmeter';
+  String _to = 'sqfeet';
+  double? result;
+
+  final units = ['sqmeter', 'sqfeet', 'sqkm', 'acre', 'hectare'];
+  final labels = {
+    'sqmeter': 'Sq Meter', 'sqfeet': 'Sq Feet',
+    'sqkm': 'Sq KM', 'acre': 'Acre', 'hectare': 'Hectare'
+  };
+  final toSqMeter = {
+    'sqmeter': 1.0, 'sqfeet': 0.092903,
+    'sqkm': 1000000.0, 'acre': 4046.86, 'hectare': 10000.0,
+  };
+
+  void _convert() {
+    final val = double.tryParse(_input.text) ?? 0;
+    if (val > 0) {
+      final inSqM = val * toSqMeter[_from]!;
+      setState(() => result = inSqM / toSqMeter[_to]!);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          _InputField(_input, 'Enter Area', Icons.crop_square),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: DropdownButtonFormField(
+                  value: _from,
+                  decoration: const InputDecoration(labelText: 'From', border: OutlineInputBorder()),
+                  items: units.map((u) => DropdownMenuItem(value: u, child: Text(labels[u]!))).toList(),
+                  onChanged: (v) => setState(() => _from = v!),
+                ),
+              ),
+              const Padding(padding: EdgeInsets.all(8), child: Icon(Icons.arrow_forward)),
+              Expanded(
+                child: DropdownButtonFormField(
+                  value: _to,
+                  decoration: const InputDecoration(labelText: 'To', border: OutlineInputBorder()),
+                  items: units.map((u) => DropdownMenuItem(value: u, child: Text(labels[u]!))).toList(),
+                  onChanged: (v) => setState(() => _to = v!),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton.icon(
+            onPressed: _convert,
+            icon: const Icon(Icons.swap_horiz),
+            label: const Text('Convert'),
+            style: ElevatedButton.styleFrom(minimumSize: const Size(double.infinity, 50)),
+          ),
+          if (result != null)
+            _ResultCard('Result', '${result!.toStringAsFixed(4)} ${labels[_to]}', Colors.green),
+        ],
+      ),
+    );
+  }
+}
+
+class DateScreen extends StatefulWidget {
+  const DateScreen({super.key});
+
+  @override
+  State<DateScreen> createState() => _DateScreenState();
+}
+
+class _DateScreenState extends State<DateScreen> {
+  int _selectedTool = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Date & Age Calculator', style: TextStyle(fontWeight: FontWeight.bold)),
+      ),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              children: [
+                Expanded(
+                  child: FilterChip(
+                    label: const Text('Age Calculator'),
+                    selected: _selectedTool == 0,
+                    onSelected: (_) => setState(() => _selectedTool = 0),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: FilterChip(
+                    label: const Text('Date Difference'),
+                    selected: _selectedTool == 1,
+                    onSelected: (_) => setState(() => _selectedTool = 1),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: _selectedTool == 0 ? const AgeCalculator() : const DateDiffCalculator(),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class AgeCalculator extends StatefulWidget {
+  const AgeCalculator({super.key});
+
+  @override
+  State<AgeCalculator> createState() => _AgeCalculatorState();
+}
+
+class _AgeCalculatorState extends State<AgeCalculator> {
+  DateTime? _dob;
+  int? years, months, days;
+
+  void _calculate() {
+    if (_dob != null) {
+      final now = DateTime.now();
+      int y = now.year - _dob!.year;
+      int m = now.month - _dob!.month;
+      int d = now.day - _dob!.day;
+      if (d < 0) { m--; d += 30; }
+      if (m < 0) { y--; m += 12; }
+      setState(() { years = y; months = m; days = d; });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          Card(
+            child: ListTile(
+              leading: const Icon(Icons.cake, color: Colors.purple),
+              title: const Text('Date of Birth'),
+              subtitle: Text(_dob == null ? 'Tap to select' : DateFormat('dd MMM yyyy').format(_dob!)),
+              onTap: () async {
+                final date = await showDatePicker(
+                  context: context,
+                  initialDate: DateTime(2000),
+                  firstDate: DateTime(1900),
+                  lastDate: DateTime.now(),
+                );
+                if (date != null) setState(() => _dob = date);
+              },
+            ),
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton.icon(
+            onPressed: _calculate,
+            icon: const Icon(Icons.calculate),
+            label: const Text('Calculate Age'),
+            style: ElevatedButton.styleFrom(minimumSize: const Size(double.infinity, 50)),
+          ),
+          if (years != null) ...[
+            const SizedBox(height: 20),
+            _ResultCard('Years', '$years Years', Colors.purple),
+            _ResultCard('Months', '$months Months', Colors.blue),
+            _ResultCard('Days', '$days Days', Colors.orange),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class DateDiffCalculator extends StatefulWidget {
+  const DateDiffCalculator({super.key});
+
+  @override
+  State<DateDiffCalculator> createState() => _DateDiffCalculatorState();
+}
+
+class _DateDiffCalculatorState extends State<DateDiffCalculator> {
+  DateTime? _date1, _date2;
+  int? diffDays, diffWeeks, diffMonths;
+
+  void _calculate() {
+    if (_date1 != null && _date2 != null) {
+      final diff = _date2!.difference(_date1!).inDays.abs();
+      setState(() {
+        diffDays = diff;
+        diffWeeks = diff ~/ 7;
+        diffMonths = diff ~/ 30;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          Card(
+            child: ListTile(
+              leading: const Icon(Icons.date_range, color: Colors.blue),
+              title: const Text('Start Date'),
+              subtitle: Text(_date1 == null ? 'Tap to select' : DateFormat('dd MMM yyyy').format(_date1!)),
+              onTap: () async {
+                final date = await showDatePicker(
+                  context: context,
+                  initialDate: DateTime.now(),
+                  firstDate: DateTime(1900),
+                  lastDate: DateTime(2100),
+                );
+                if (date != null) setState(() => _date1 = date);
+              },
+            ),
+          ),
+          const SizedBox(height: 8),
+          Card(
+            child: ListTile(
+              leading: const Icon(Icons.date_range, color: Colors.green),
+              title: const Text('End Date'),
+              subtitle: Text(_date2 == null ? 'Tap to select' : DateFormat('dd MMM yyyy').format(_date2!)),
+              onTap: () async {
+                final date = await showDatePicker(
+                  context: context,
+                  initialDate: DateTime.now(),
+                  firstDate: DateTime(1900),
+                  lastDate: DateTime(2100),
+                );
+                if (date != null) setState(() => _date2 = date);
+              },
+            ),
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton.icon(
+            onPressed: _calculate,
+            icon: const Icon(Icons.calculate),
+            label: const Text('Calculate Difference'),
+            style: ElevatedButton.styleFrom(minimumSize: const Size(double.infinity, 50)),
+          ),
+          if (diffDays != null) ...[
+            const SizedBox(height: 20),
+            _ResultCard('Days', '$diffDays Days', Colors.blue),
+            _ResultCard('Weeks', '$diffWeeks Weeks', Colors.purple),
+            _ResultCard('Months', '$diffMonths Months', Colors.green),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _InputField extends StatelessWidget {
+  final TextEditingController controller;
+  final String label;
+  final IconData icon;
+
+  const _InputField(this.controller, this.label, this.icon);
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: TextFormField(
+        controller: controller,
+        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+        decoration: InputDecoration(
+          labelText: label,
+          prefixIcon: Icon(icon),
+          border: const OutlineInputBorder(
+              borderRadius: BorderRadius.all(Radius.circular(12))),
+        ),
+      ),
+    );
+  }
+}
+
+class _ResultCard extends StatelessWidget {
+  final String title;
+  final String value;
+  final Color color;
+
+  const _ResultCard(this.title, this.value, this.color);
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 8),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(title, style: const TextStyle(color: Colors.grey, fontSize: 16)),
+            Text(value, style: TextStyle(color: color, fontSize: 18, fontWeight: FontWeight.bold)),
+          ],
+        ),
+      ),
+    );
+  }
+}
